@@ -1,92 +1,128 @@
+// Create a builder design pattern
+// We have a student class with 10 attributes.
+// Problem : To initialize the student object we will be needing
+// the sequence of the attributes and // to check the data is correct or not
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"log"
+	"regexp"
+)
 
-type IBuilder interface {
-	setWindowType()
-	setDoorType()
-	setNumFloor()
-	getHouse() House
+type Student struct {
+	name         string
+	age          int
+	sex          string
+	grad_year    int
+	address      string
+	phone_number string
+	email        string
+	batch        int
 }
 
-func getBuilder(builderType string) IBuilder {
-	if builderType == "normal" {
-		return newNormalBuilder()
-	}
+type StudentBuilder struct {
+	name         string
+	age          int
+	sex          string
+	grad_year    int
+	address      string
+	phone_number string
+	email        string
+	batch        int
+}
 
+func NewStudnetBuilder() *StudentBuilder {
+	return &StudentBuilder{}
+}
+
+func (b *StudentBuilder) setName(name string) *StudentBuilder {
+	b.name = name
+	return b
+}
+
+func (b *StudentBuilder) setAge(age int) *StudentBuilder {
+	b.age = age
+	return b
+}
+
+func (b *StudentBuilder) setSex(sex string) *StudentBuilder {
+	b.sex = sex
+	return b
+}
+
+func (b *StudentBuilder) setGradYear(year int) *StudentBuilder {
+	b.grad_year = year
+	return b
+}
+func (b *StudentBuilder) setAddress(address string) *StudentBuilder {
+	b.address = address
+	return b
+}
+func (b *StudentBuilder) setPhone_number(phone string) *StudentBuilder {
+	b.phone_number = phone
+	return b
+}
+
+func (b *StudentBuilder) setEmail(email string) *StudentBuilder {
+	b.email = email
+	return b
+}
+func (b *StudentBuilder) setBatch(batch int) *StudentBuilder {
+	b.batch = batch
+	return b
+}
+
+func (b *StudentBuilder) validate() error {
+	if b.age < 18 {
+		return errors.New("age should be greater than 18")
+	}
+	if b.grad_year > 2022 {
+		return errors.New("under Qualified")
+	}
+	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(emailRegex)
+	if !re.MatchString(b.email) {
+		return errors.New("invalid email format")
+	}
+	if len(b.phone_number) != 10 {
+		return errors.New("phone number must have 10 digits")
+	}
 	return nil
 }
-
-type NormalBuilder struct {
-	windowType string
-	doorType   string
-	floor      int
-}
-
-func newNormalBuilder() *NormalBuilder {
-	return &NormalBuilder{}
-}
-
-func (n *NormalBuilder) setWindowType() {
-	n.windowType = "Wooden Window"
-}
-
-func (n *NormalBuilder) setDoorType() {
-	n.doorType = "Wooden Door"
-}
-
-func (n *NormalBuilder) setNumFloor() {
-	n.floor = 2
-}
-
-func (n *NormalBuilder) getHouse() House {
-	return House{
-		doorType:   n.doorType,
-		windowType: n.windowType,
-		floor:      n.floor,
+func (b *StudentBuilder) Build() (*Student, error) {
+	err := b.validate()
+	if err != nil {
+		return nil, err
 	}
-}
-
-type House struct {
-	windowType string
-	doorType   string
-	floor      int
-}
-
-type Director struct {
-	builder IBuilder
-}
-
-func newDirector(b IBuilder) *Director {
-	return &Director{
-		builder: b,
+	student := &Student{
+		name:         b.name,
+		age:          b.age,
+		sex:          b.sex,
+		email:        b.email,
+		address:      b.address,
+		grad_year:    b.grad_year,
+		phone_number: b.phone_number,
+		batch:        b.batch,
 	}
-}
+	return student, nil
 
-func (d *Director) setBuilder(b IBuilder) {
-	d.builder = b
-}
-
-func (d *Director) buildHouse() House {
-	d.builder.setDoorType()
-	d.builder.setWindowType()
-	d.builder.setNumFloor()
-	return d.builder.getHouse()
 }
 
 func main() {
-	normalbuilder := getBuilder("normal")
-	director := newDirector(normalbuilder)
-	director.setBuilder(normalbuilder)
-	normalHouse := director.buildHouse()
-	fmt.Println("Normal house door type : ",normalHouse.doorType)
-	fmt.Println("Normal House windw type : " ,normalHouse.windowType)
-	fmt.Println("Normal house number floor ", normalHouse.floor)
+	st, err := NewStudnetBuilder().setName("Nikhil").setAge(19).setEmail("abc.1@co.com").setGradYear(2022).setBatch(123).setSex("Male").setAddress("adnjndfj").setPhone_number("1234567890").Build()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Printf("Address %p\n" , st)
 }
 
 
-// Product: The complex object that is being constructed. : House here
-// Builder Interface: Defines the steps required to build the product. : Ibuilder
-// Concrete Builder: Implements the steps defined in the Builder interface. NormalbUilder implements IBuilder
-// Director: Constructs the product using the Builder interface. Director orchestrates constructionn process .It uses a builder t construct object step by step
-// Client Code: Uses the Director to get the final product.
+// Summary:
+// - Created a Student struct to represent a student with various attributes.
+// - Created a StudentBuilder struct with similar attributes to help in building a Student object.
+// - Added setter methods (setName, setAge, etc.) in StudentBuilder to set values for each attribute.
+// - Added a validate method in StudentBuilder to check validation rules before creating the object (e.g., age must be >18).
+// - Created a Build method in StudentBuilder that calls validate and, if successful, creates and returns a Student object.
